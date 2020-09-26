@@ -66,7 +66,7 @@ Menu *Menu_build(char *caption, MenuItem *items, int count) {
 
     m->items = malloc(count * sizeof(MenuItem));
     if (m->items == NULL) {
-        PANIC(E_ALLOC);
+        panic(E_ALLOC);
     }
     for (i = 0; i < count; i++) {
         m->items[i] = MenuItem_copy(&items[i]);

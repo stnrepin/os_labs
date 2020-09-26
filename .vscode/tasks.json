@@ -10,7 +10,7 @@
                 "/std:c11",
                 "-I", "../",
                 "..\\main.c", "..\\actions.c", "..\\menu.c", "..\\error.c",
-                "-DUNICODE", "-D_CRT_SECURE_NO_WARNINGS"
+                "-DUNICODE"
             ],
             "options": {
                 "cwd": "${workspaceFolder}\\build"

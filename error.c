@@ -23,10 +23,11 @@ const char *get_error_message(int err) {
             return "bug: menu item handler is not set";
         case E_ERROR_HANDLING:
             return "can't format error message (an error occurred during error handling)";
+        case E_DRIVE_INVALID_LETTER:
+            return "drive is not exist";
         case E_WINDOWS_ERROR:
             return get_windows_error_message();
     }
-
     return strerror(err);
 }
 

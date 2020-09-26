@@ -1,15 +1,17 @@
 #ifndef MAIN_H_
 #define MAIN_H_
 
-#include <string.h>
-#include <Windows.h>
+#ifndef UNICODE
+    #error "the program only works with Unicode. Define UNICODE macro."
+#endif // !UNICODE
+
+#include <wchar.h>
 #include <menu.h>
 
 int create_directory();
 
 int wmain(int argc, wchar_t **argv);
 
-wchar_t *readlinew(wchar_t *buf, size_t size);
 int launch_menu(void *arg, Menu *(menu_builder)());
 
 Menu *build_main_menu();

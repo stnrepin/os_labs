@@ -5,6 +5,7 @@ enum Errors {
     E_ALLOC = 128,
     E_MENU_NULL_HANDLER,
     E_ERROR_HANDLING,
+    E_DRIVE_INVALID_LETTER,
     E_WINDOWS_ERROR,
 };
 

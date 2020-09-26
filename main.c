@@ -32,15 +32,6 @@ int wmain(int argc, wchar_t **argv) {
     return res;
 }
 
-wchar_t *readlinew(wchar_t *buf, size_t size) {
-    size_t len;
-    buf = fgetws(buf, size, stdin);
-    len = wcslen(buf);
-    _putws(buf);
-    buf[len-1] = '\0';
-    return buf;
-}
-
 int launch_menu(void *arg, Menu *(*menu_builder)()) {
     int res;
     Menu *menu;
@@ -66,7 +57,10 @@ Menu *build_task1_menu() {
     Menu *menu;
     BUILD_MENU(
         menu,
-        MENU_ITEM("Create/Remove Folder", create_remove_dir),
+        MENU_ITEM("List Drivers", list_drivers),
+        MENU_ITEM("Driver info", drive_info),
+        MENU_ITEM("Create/Remove Directory", create_remove_dir),
+        MENU_ITEM("Create File", create_file),
     );
     return menu;
 }
