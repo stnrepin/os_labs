@@ -40,7 +40,7 @@ Menu *Menu_new() {
     return menu;
 }
 
-void Menu_destroy(Menu *menu) {
+void Menu_free(Menu *menu) {
     if (menu != NULL) {
         Menu_free_items(menu);
         menu->count = 0;
@@ -71,7 +71,7 @@ Menu *Menu_build(char *caption, MenuItem *items, int count) {
     for (i = 0; i < count; i++) {
         m->items[i] = MenuItem_copy(&items[i]);
     }
-    strcpy(m->caption, caption);
+    strncpy(m->caption, caption, MAX_CAPTION_LEN);
     m->count = i;
 
     return m;
@@ -85,7 +85,7 @@ void Menu_draw(Menu *menu) {
     }
 }
 
-int Menu_run(Menu *menu) {
+int Menu_run(Menu *menu, void* arg) {
     int err;
     int right_input, item, c;
     MenuHandlerFunc func;
@@ -103,7 +103,7 @@ int Menu_run(Menu *menu) {
     item--;
     func = menu->items[item]->handler;
     if (func != NULL) {
-        err = func();
+        err = func(arg);
     }
     else {
         err = E_MENU_NULL_HANDLER;

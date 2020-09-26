@@ -7,8 +7,10 @@
             "args": [
                 "/Zi",
                 "/EHsc",
+                "/std:c11",
                 "-I", "../",
-                "..\\main.c", "..\\menu.c", "..\\error.c"
+                "..\\main.c", "..\\actions.c", "..\\menu.c", "..\\error.c",
+                "-DUNICODE", "-D_CRT_SECURE_NO_WARNINGS"
             ],
             "options": {
                 "cwd": "${workspaceFolder}\\build"

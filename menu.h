@@ -12,7 +12,7 @@
         menu = Menu_build("Choose action:", menu_items, item_count); \
     } while(0)                                                       \
 
-typedef int (*MenuHandlerFunc)();
+typedef int (*MenuHandlerFunc)(void*);
 
 typedef struct {
     char caption[MAX_CAPTION_LEN];
@@ -34,6 +34,6 @@ void Menu_free(Menu *menu);
 void Menu_free_items(Menu *menu);
 Menu *Menu_build(char *caption, MenuItem *items, int count);
 void Menu_draw(Menu *menu);
-int Menu_run(Menu *menu);
+int Menu_run(Menu *menu, void* arg);
 
 #endif /* !MENU_H_ */
