@@ -3,7 +3,11 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <wchar.h>
+#include <stddef.h>
+#include <inttypes.h>
+
 #include <Windows.h>
+
 #include <error.h>
 
 int list_drivers(void *arg) {
@@ -26,17 +30,18 @@ int list_drivers(void *arg) {
     puts("Drives:");
     i = 0;
     while (i < size) {
-        i += printf("\t%S\n", &names_buf[i]) - 1; // 2 extra symbols in format string.
+        i += printf("\t%S\n", &names_buf[i]) - 1; // 2 extra symbols
+                                                  // in format string.
     }
     return 0;
 }
 
-int drive_info(void* arg) {
+int drive_info(void *arg) {
     DWORD drive_flags, type,
           volume_serial, max_comp_len, fs_flags,
           sec_per_clu, bytes_per_sec, free_clu, cluster_count;
     char drive_letter, drive_index;
-    const char* type_str;
+    const char *type_str;
     wchar_t root_buf[MAX_STR], volume_buf[MAX_STR], fs_name_buf[MAX_STR];
     BOOL res;
 
@@ -117,7 +122,6 @@ int create_dir(void *arg) {
     if (!res) {
         return E_WINDOWS_ERROR;
     }
-    puts("Done");
 
     return 0;
 }
@@ -132,7 +136,185 @@ int remove_dir(void *arg) {
     if (!res) {
         return E_WINDOWS_ERROR;
     }
-    puts("Done");
+
+    return 0;
+}
+
+int create_file(void *arg) {
+    HANDLE h;
+    wchar_t name[MAX_STR];
+
+    printf("Enter file path: ");
+    readlinew(name, MAX_STR);
+    puts("Creating...");
+    h = CreateFile(name, GENERIC_READ | GENERIC_WRITE, 0, NULL,
+                   CREATE_NEW, 0, NULL);
+    if (h == INVALID_HANDLE_VALUE) {
+        return E_WINDOWS_ERROR;
+    }
+    CloseHandle(h);
+
+    return 0;
+}
+
+int copy_file(void *arg) {
+    BOOL res;
+    WStrPair *pair;
+    pair = (WStrPair*)arg;
+    res = CopyFile(pair->first, pair->second, TRUE);
+    if (!res) {
+        return E_WINDOWS_ERROR;
+    }
+    return 0;
+}
+
+int move_file(void *arg) {
+    BOOL res;
+    WStrPair *pair;
+    pair = (WStrPair*)arg;
+    res = MoveFile(pair->first, pair->second);
+    if (!res) {
+        return E_WINDOWS_ERROR;
+    }
+    return 0;
+}
+
+int move_file_ex(void *arg) {
+    BOOL res;
+    WStrPair *pair;
+    pair = (WStrPair*)arg;
+    res = MoveFileEx(pair->first, pair->second, MOVEFILE_REPLACE_EXISTING);
+    if (!res) {
+        return E_WINDOWS_ERROR;
+    }
+    return 0;
+}
+
+int get_file_atts(void *arg) {
+    HANDLE h;
+    DWORD res;
+    size_t i, mes_end;
+    wchar_t path[MAX_STR];
+    char mes[MAX_STR];
+    DWORD attrs;
+    const FileAttr *attr;
+
+    h = (HANDLE)arg;
+    res = GetFinalPathNameByHandle(h, path, MAX_STR, 0);
+    if (res == 0) {
+        return E_WINDOWS_ERROR;
+    }
+    attrs = GetFileAttributes(path);
+    if (res == INVALID_FILE_ATTRIBUTES) {
+        return E_WINDOWS_ERROR;
+    }
+
+    mes_end = 0;
+    for (i = 0; i < ARRAY_SIZE(kFileAttrStringMap, FileAttr); i++) {
+        attr = &kFileAttrStringMap[i];
+        if (attrs & attr->flag) {
+            memcpy(&mes[mes_end], attr->name, strlen(attr->name));
+            mes_end += strlen(attr->name);
+            mes[mes_end++] = ' ';
+        }
+    }
+    mes[mes_end] = '\0';
+    printf("File attributes: %s\n", mes);
+    return 0;
+}
+
+int set_file_atts(void* arg) {
+    HANDLE h;
+    DWORD path_size;
+    BOOL res;
+    wchar_t path[MAX_STR];
+    DWORD attrs, attr_val;
+
+    h = (HANDLE)arg;
+    path_size = GetFinalPathNameByHandle(h, path, MAX_STR, 0);
+    if (path_size == 0) {
+        return E_WINDOWS_ERROR;
+    }
+
+    attrs = 0;
+    do {
+        printf("Enter file attribute (hex value, 0 to stop): ");
+        scanf("%lx", &attr_val);
+        attrs |= attr_val;
+    } while(attr_val != 0);
+
+    res = SetFileAttributes(path, attrs);
+    if (!res) {
+        return E_WINDOWS_ERROR;
+    }
+    return 0;
+}
+
+int get_file_info(void* arg) {
+    BOOL res;
+    HANDLE h;
+    BY_HANDLE_FILE_INFORMATION info;
+    uint64_t index, size;
+
+    h = (HANDLE)arg;
+    res = GetFileInformationByHandle(h, &info);
+    if (!res) {
+        return E_WINDOWS_ERROR;
+    }
+    index = ((uint64_t)info.nFileIndexHigh << 32) + info.nFileIndexLow;
+    size = ((uint64_t)info.nFileSizeHigh << 32) + info.nFileSizeLow;
+    printf("File index: %" PRIu64 "\n", index);
+    printf("File size (byte): %" PRIu64 "\n", size);
+    printf("Number of links: %lu\n", info.nNumberOfLinks);
+    return 0;
+}
+
+int get_file_time(void* arg) {
+    BOOL res;
+    HANDLE h;
+    FILETIME ctime, atime, wtime;
+    h = (HANDLE)arg;
+    res = GetFileTime(h, &ctime, &atime, &wtime);
+    if (!res) {
+        return E_WINDOWS_ERROR;
+    }
+
+    printf("Creation time: ");
+    println_filetime(ctime);
+    printf("Last access time: ");
+    println_filetime(atime);
+    printf("Last write time: ");
+    println_filetime(wtime);
+
+    return 0;
+}
+
+int set_file_time(void* arg) {
+    HANDLE h;
+    BOOL res;
+    int c;
+    SYSTEMTIME st;
+    FILETIME ft;
+
+    h = (HANDLE)arg;
+
+    printf("Enter new date in format YYYY MM DD HH MM SS: ");
+    c = scanf("%hd %hd %hd %hd %hd %hd", &st.wYear, &st.wMonth, &st.wDay,
+                                         &st.wHour, &st.wMinute, &st.wSecond);
+    st.wMilliseconds = 0;
+    if (c != 6) {
+        return E_FORMAT;
+    }
+
+    res = SystemTimeToFileTime(&st, &ft);
+    if (!res) {
+        return E_WINDOWS_ERROR;
+    }
+
+    res = SetFileTime(h, &ft, &ft, &ft);
+    if (!res) {
+        return E_WINDOWS_ERROR;
+    }
 
     return 0;
 }
@@ -147,32 +329,27 @@ wchar_t *readlinew(wchar_t *buf, size_t size) {
     return buf;
 }
 
-int create_file(void* arg) {
-    HANDLE h;
-    wchar_t name[MAX_STR];
-
-    printf("Enter file path: ");
-    readlinew(name, MAX_STR);
-    puts("Creating...");
-    h = CreateFile(name, GENERIC_READ | GENERIC_WRITE, 0, NULL,
-                   CREATE_NEW, 0, NULL);
-    if (h == INVALID_HANDLE_VALUE) {
-        return E_WINDOWS_ERROR;
+char *readline(char *buf, size_t size) {
+    size_t len;
+    buf = fgets(buf, size, stdin);
+    len = strlen(buf);
+    if (len > 0) {
+        buf[len-1] = '\0';
     }
-    CloseHandle(h);
-    puts("Done");
-
-    return 0;
+    return buf;
 }
 
-int copy_file(void* arg) {
-    return 0;
-}
+void println_filetime(FILETIME ft) {
+    BOOL res;
+    SYSTEMTIME st;
 
-int move_file(void* arg) {
-    return 0;
-}
-
-int move_file_ex(void* arg) {
-    return 0;
+    res = FileTimeToSystemTime(&ft, &st);
+    if (!res) {
+        puts("<error>");
+        return;
+    }
+    printf("%04d-%02d-%02d %02d:%02d:%02d:%03d\n",
+           st.wYear, st.wMonth, st.wDay,
+           st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
+    return;
 }

@@ -2,10 +2,11 @@
 #define ERROR_H_
 
 enum Errors {
-    E_ALLOC = 128,
+    E_ALLOC = 100,
     E_MENU_NULL_HANDLER,
     E_ERROR_HANDLING,
     E_DRIVE_INVALID_LETTER,
+    E_FORMAT,
     E_WINDOWS_ERROR,
 };
 

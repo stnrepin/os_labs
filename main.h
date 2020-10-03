@@ -8,7 +8,9 @@
 #include <wchar.h>
 #include <menu.h>
 
-int create_directory();
+int create_remove_dir(void*);
+int copy_move_file(void*);
+int file_attrs(void*);
 
 int wmain(int argc, wchar_t **argv);
 
@@ -19,6 +21,8 @@ Menu *build_main_menu();
 Menu *build_task1_menu();
 int task1_menu_handler(void* arg);
 Menu *build_create_remove_dir_menu();
+Menu *build_copy_move_file_menu();
+Menu *build_file_attrs_menu();
 
 Menu *build_task2_menu();
 

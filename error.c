@@ -25,6 +25,8 @@ const char *get_error_message(int err) {
             return "can't format error message (an error occurred during error handling)";
         case E_DRIVE_INVALID_LETTER:
             return "drive is not exist";
+        case E_FORMAT:
+            return "invalid input format";
         case E_WINDOWS_ERROR:
             return get_windows_error_message();
     }
@@ -47,7 +49,6 @@ const char *get_windows_error_message() {
     if (size < 2) {
         panic(E_ERROR_HANDLING);
     }
-    printf("== %d\n", (int)size);
-    buf[size-2] = '\0'; // Windows uses \n\r.
+    buf[size-2] = '\0'; // Windows uses \n\r
     return buf; // XXX: Memory leak but as error occurred we don't mind.
 }
