@@ -43,12 +43,13 @@ const char *get_windows_error_message() {
         return "";
     }
     buf = NULL;
-    size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
-                            FORMAT_MESSAGE_IGNORE_INSERTS,
-                            NULL, mes_id, LANG_NEUTRAL, (LPSTR)&buf, 0, NULL);
+    size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                          FORMAT_MESSAGE_FROM_SYSTEM |
+                          FORMAT_MESSAGE_IGNORE_INSERTS,
+                          NULL, mes_id, LANG_NEUTRAL, (LPSTR)&buf, 0, NULL);
     if (size < 2) {
         panic(E_ERROR_HANDLING);
     }
     buf[size-2] = '\0'; // Windows uses \n\r
-    return buf; // XXX: Memory leak but as error occurred we don't mind.
+    return buf; // XXX: Memory leak but since error occurred we don't mind.
 }

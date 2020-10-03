@@ -9,44 +9,6 @@
 #include <error.h>
 #include <menu.h>
 
-int create_remove_dir(void *arg) {
-    wchar_t name[MAX_STR];
-
-    printf("Enter directory name: ");
-    readlinew(name, MAX_STR);
-
-    return launch_menu(name, build_create_remove_dir_menu);
-}
-
-int copy_move_file(void* arg) {
-    WStrPair pair;
-
-    printf("Enter source file/directory path: ");
-    readlinew(pair.first, MAX_STR);
-    printf("Enter destination file/directory path: ");
-    readlinew(pair.second, MAX_STR);
-
-    return launch_menu(&pair, build_copy_move_file_menu);
-}
-
-int file_attrs(void* arg) {
-    int res;
-    HANDLE h;
-    OFSTRUCT of;
-    wchar_t name[MAX_STR];
-
-    printf("Enter file name: ");
-    readlinew(name, MAX_STR);
-    h = CreateFile(name, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
-    if (h == INVALID_HANDLE_VALUE) {
-        return E_WINDOWS_ERROR;
-    }
-
-    res = launch_menu(h, build_file_attrs_menu);
-    CloseHandle(h);
-    return res;
-}
-
 int wmain(int argc, wchar_t **argv) {
     int res;
 
@@ -73,6 +35,52 @@ int launch_menu(void *arg, Menu *(*menu_builder)()) {
     res = Menu_run(menu, arg);
     Menu_free(menu);
     return res;
+}
+
+int task1_menu_handler(void *arg) {
+    return launch_menu(arg, build_task1_menu);
+}
+
+int create_remove_dir(void *arg) {
+    wchar_t name[MAX_STR];
+
+    printf("Enter directory name: ");
+    readlinew(name, MAX_STR);
+
+    return launch_menu(name, build_create_remove_dir_menu);
+}
+
+int copy_move_file(void *arg) {
+    WStrPair pair;
+
+    printf("Enter source file/directory path: ");
+    readlinew(pair.first, MAX_STR);
+    printf("Enter destination file/directory path: ");
+    readlinew(pair.second, MAX_STR);
+
+    return launch_menu(&pair, build_copy_move_file_menu);
+}
+
+int file_attrs(void *arg) {
+    int res;
+    HANDLE h;
+    OFSTRUCT of;
+    wchar_t name[MAX_STR];
+
+    printf("Enter file name: ");
+    readlinew(name, MAX_STR);
+    h = CreateFile(name, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+    if (h == INVALID_HANDLE_VALUE) {
+        return E_WINDOWS_ERROR;
+    }
+
+    res = launch_menu(h, build_file_attrs_menu);
+    CloseHandle(h);
+    return res;
+}
+
+int task2_menu_handler(void *arg) {
+    return launch_menu(arg, build_task2_menu);
 }
 
 Menu *build_main_menu() {
@@ -140,12 +148,4 @@ Menu *build_task2_menu() {
         MENU_ITEM("<TODO>", NULL),
     );
     return menu;
-}
-
-int task1_menu_handler(void *arg) {
-    return launch_menu(arg, build_task1_menu);
-}
-
-int task2_menu_handler(void *arg) {
-    return launch_menu(arg, build_task2_menu);
 }

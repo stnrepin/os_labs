@@ -34,6 +34,6 @@ void Menu_free(Menu *menu);
 void Menu_free_items(Menu *menu);
 Menu *Menu_build(char *caption, MenuItem *items, int count);
 void Menu_draw(Menu *menu);
-int Menu_run(Menu *menu, void* arg);
+int Menu_run(Menu *menu, void *arg);
 
-#endif /* !MENU_H_ */
+#endif // !MENU_H_

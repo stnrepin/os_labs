@@ -43,21 +43,20 @@ static const FileAttr kFileAttrStringMap[] = {
 };
 
 int list_drivers(void *arg);
-int drive_info(void* arg);
+int drive_info(void *arg);
 int create_dir(void *arg);
 int remove_dir(void *arg);
 int create_file(void *arg);
-int copy_file(void* arg);
-int move_file(void* arg);
-int move_file_ex(void* arg);
-int get_file_atts(void* arg);
-int set_file_atts(void* arg);
-int get_file_info(void* arg);
-int get_file_time(void* arg);
-int set_file_time(void* arg);
+int copy_file(void *arg);
+int move_file(void *arg);
+int move_file_ex(void *arg);
+int get_file_atts(void *arg);
+int set_file_atts(void *arg);
+int get_file_info(void *arg);
+int get_file_time(void *arg);
+int set_file_time(void *arg);
 
 wchar_t *readlinew(wchar_t *buf, size_t size);
-char *readline(char *buf, size_t size);
 void println_filetime(FILETIME ft);
 
 #endif // !ACTIONS_H_

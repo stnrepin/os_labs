@@ -85,7 +85,7 @@ void Menu_draw(Menu *menu) {
     }
 }
 
-int Menu_run(Menu *menu, void* arg) {
+int Menu_run(Menu *menu, void *arg) {
     int err;
     int right_input, item, c;
     MenuHandlerFunc func;

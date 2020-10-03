@@ -21,7 +21,6 @@ int list_drivers(void *arg) {
     }
 
     ltoa(drive_flags, flags_buf, 2);
-    // DWORD is long.
     printf("Drivers (flags): %s\n", flags_buf);
 
     // Substruct 1 because nBufferLength should not include the
@@ -223,7 +222,7 @@ int get_file_atts(void *arg) {
     return 0;
 }
 
-int set_file_atts(void* arg) {
+int set_file_atts(void *arg) {
     HANDLE h;
     DWORD path_size;
     BOOL res;
@@ -250,7 +249,7 @@ int set_file_atts(void* arg) {
     return 0;
 }
 
-int get_file_info(void* arg) {
+int get_file_info(void *arg) {
     BOOL res;
     HANDLE h;
     BY_HANDLE_FILE_INFORMATION info;
@@ -269,7 +268,7 @@ int get_file_info(void* arg) {
     return 0;
 }
 
-int get_file_time(void* arg) {
+int get_file_time(void *arg) {
     BOOL res;
     HANDLE h;
     FILETIME ctime, atime, wtime;
@@ -289,7 +288,7 @@ int get_file_time(void* arg) {
     return 0;
 }
 
-int set_file_time(void* arg) {
+int set_file_time(void *arg) {
     HANDLE h;
     BOOL res;
     int c;
@@ -323,16 +322,6 @@ wchar_t *readlinew(wchar_t *buf, size_t size) {
     size_t len;
     buf = fgetws(buf, size, stdin);
     len = wcslen(buf);
-    if (len > 0) {
-        buf[len-1] = '\0';
-    }
-    return buf;
-}
-
-char *readline(char *buf, size_t size) {
-    size_t len;
-    buf = fgets(buf, size, stdin);
-    len = strlen(buf);
     if (len > 0) {
         buf[len-1] = '\0';
     }
