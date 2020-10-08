@@ -56,6 +56,24 @@ int get_file_info(void *arg);
 int get_file_time(void *arg);
 int set_file_time(void *arg);
 
+typedef struct {
+    OVERLAPPED ol;
+    char* buf;
+} BufferedOverlapped;
+
+typedef struct {
+    DWORD start;
+} Timer;
+typedef DWORD TimerDiff;
+
+int run_copy_overlapped(void *arg);
+int copy_file_overlapped(HANDLE src, HANDLE dst, int blk_sz, int op_cnt,
+                         /*out*/ TimerDiff *tmrd);
+void CALLBACK write_after_read_callback(DWORD err, DWORD byte_sz,
+                                        LPOVERLAPPED ov);
+Timer timer_start();
+TimerDiff timer_finish(Timer *t);
+
 wchar_t *readlinew(wchar_t *buf, size_t size);
 void println_filetime(FILETIME ft);
 
