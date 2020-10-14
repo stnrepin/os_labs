@@ -40,7 +40,7 @@ const char *get_windows_error_message() {
 
     mes_id = GetLastError();
     if (mes_id == 0) {
-        return "";
+        return "<no-error>";
     }
     buf = NULL;
     size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER |

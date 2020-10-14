@@ -132,7 +132,7 @@ Menu *build_file_attrs_menu() {
     Menu *menu;
     BUILD_MENU(
         menu,
-        MENU_ITEM("Get Fil Attributes", get_file_atts),
+        MENU_ITEM("Get File Attributes", get_file_atts),
         MENU_ITEM("Set File Attributes", set_file_atts),
         MENU_ITEM("Get File Information", get_file_info),
         MENU_ITEM("Get File Time", get_file_time),
@@ -145,7 +145,7 @@ Menu *build_task2_menu() {
     Menu *menu;
     BUILD_MENU(
         menu,
-        MENU_ITEM("<TODO>", NULL),
+        MENU_ITEM("Copy file (overlapped)", run_copy_overlapped),
     );
     return menu;
 }

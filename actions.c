@@ -328,33 +328,47 @@ int set_file_time(void *arg) {
 //
 
 int run_copy_overlapped(void *arg) {
-    int block_size, op_cnt, res;
+    int block_size, block_count, op_cnt;
     HANDLE src_f, dst_f;
+    DWORD res, sectors_per_cluster, bytes_per_sector;
+    HandlePair hp;
     wchar_t src_name[MAX_STR], dst_name[MAX_STR];
     TimerDiff tmrd;
 
-    printf("Enter the block size: ");
-    scanf("%d", &block_size);
+    printf("Enter the block count: ");
+    scanf("%d", &block_count);
     printf("Enter operation count: ");
-    scanf("%d", &op_cnt);
+    scanf("%d%*c", &op_cnt);
 
     printf("Enter source file name: ");
     readlinew(src_name, MAX_STR);
     src_f = CreateFile(src_name, GENERIC_READ, 0, NULL,
-                    OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
+                    OPEN_EXISTING,
+                    FILE_FLAG_OVERLAPPED | FILE_FLAG_NO_BUFFERING, NULL);
     if (src_f == INVALID_HANDLE_VALUE) {
         return E_WINDOWS_ERROR;
     }
 
-    printf("Enter source file name: ");
+    res = GetDiskFreeSpace(NULL, &sectors_per_cluster, &bytes_per_sector,
+                           NULL, NULL);
+    if (res == 0) {
+        return E_WINDOWS_ERROR;
+    }
+    block_size = sectors_per_cluster*bytes_per_sector;
+    printf("Use block size %ld\n", block_size);
+
+    printf("Enter destination file name: ");
     readlinew(dst_name, MAX_STR);
     dst_f = CreateFile(dst_name, GENERIC_WRITE, 0, NULL,
-                    CREATE_NEW, FILE_FLAG_OVERLAPPED, NULL);
+                       CREATE_ALWAYS,
+                       FILE_FLAG_OVERLAPPED | FILE_FLAG_NO_BUFFERING, NULL);
     if (dst_f == INVALID_HANDLE_VALUE) {
         return E_WINDOWS_ERROR;
     }
 
-    res = copy_file_overlapped(src_f, dst_f, block_size, op_cnt, &tmrd);
+    hp.src = src_f;
+    hp.dst = dst_f;
+    res = copy_file_overlapped(&hp, block_size*block_count, op_cnt, &tmrd);
     if (res != 0) {
         return res;
     }
@@ -368,24 +382,32 @@ int run_copy_overlapped(void *arg) {
     return 0;
 }
 
-int copy_file_overlapped(HANDLE src, HANDLE dst,
-                         int blk_sz, int op_cnt,
+int copy_file_overlapped(HandlePair* hp,
+                         int buf_sz, int op_cnt,
                          /*out*/ TimerDiff* tmrd)
 {
     int i, res, offset;
-    DWORD src_sz;
+    volatile int ol_op_finished;
+    volatile DWORD ol_op_err; 
     BufferedOverlapped *bol;
     Timer tmr;
-    BOOL should_continue;
 
     res = 0;
+    ol_op_finished = 0;
+    ol_op_err = ERROR_SUCCESS;
 
     bol = malloc(op_cnt*sizeof(BufferedOverlapped));
     if (bol == NULL) {
         return E_ALLOC;
     }
     for (i = 0; i < op_cnt; i++) {
-        bol[i].buf = malloc(blk_sz*sizeof(char));
+        bol[i].ol.hEvent = hp;
+        bol[i].op_cnt = op_cnt;
+        bol[i].op_finished = &ol_op_finished;
+        bol[i].last_err = &ol_op_err;
+        bol[i].buf_sz = buf_sz;
+        bol[i].buf = malloc(bol[i].buf_sz);
+        bol[i].ol.OffsetHigh = 0;
         if (bol[i].buf == NULL) {
             res = E_ALLOC;
             op_cnt = i;
@@ -395,23 +417,21 @@ int copy_file_overlapped(HANDLE src, HANDLE dst,
 
     offset = 0;
     tmr = timer_start();
-    should_continue = TRUE;
-    while (should_continue) {
-        for (i = 0; i < op_cnt; i++) {
-            if (bol[i].buf = NULL) {
-                bol[i].buf = malloc(blk_sz*sizeof(char));
-            }
-            bol[i].ol.hEvent = dst;
-            bol[i].ol.Offset = offset;
-            offset += blk_sz;
-            should_continue =
-                ReadFileEx(src, bol[i].buf, blk_sz, (LPOVERLAPPED)&bol[i],
-                       write_after_read_callback);
-        }
+    for (i = 0; i < op_cnt; i++) {
+        bol[i].ol.Offset = offset;
+        offset += buf_sz;
+        read_src_async(ERROR_SUCCESS, 0, (LPOVERLAPPED)&bol[i]);
+    }
+    while (ol_op_finished < op_cnt && ol_op_err == ERROR_SUCCESS) {
         SleepEx(INFINITE, TRUE);
     }
     *tmrd = timer_finish(&tmr);
-    if (GetLastError() != ERROR_HANDLE_EOF) {
+
+    if (GetLastError() != ERROR_SUCCESS) {
+        res = E_WINDOWS_ERROR;
+    }
+    if (ol_op_err != ERROR_SUCCESS && ol_op_err != ERROR_HANDLE_EOF) {
+        SetLastError(ol_op_err);
         res = E_WINDOWS_ERROR;
     }
 
@@ -423,23 +443,40 @@ out:
     return res;
 }
 
-void CALLBACK write_after_read_callback(DWORD err, DWORD byte_sz,
-                                        LPOVERLAPPED ol)
-{
+void CALLBACK read_src_async(DWORD err, DWORD byte_read, LPOVERLAPPED ol) {
+    BOOL res;
     BufferedOverlapped *bol;
-    HANDLE dest;
+    HANDLE src;
+
     bol = (BufferedOverlapped*)ol;
-    dest = bol->ol.hEvent;
-    WriteFileEx(dest, bol->buf, byte_sz, (LPOVERLAPPED)bol, NULL);
+    *bol->last_err = err;
+    src = ((HandlePair*)bol->ol.hEvent)->src;
+    bol->ol.Offset += (bol->op_cnt)*byte_read;
+    ReadFileEx(src, bol->buf, bol->buf_sz, ol, write_dst_async);
+}
+
+void CALLBACK write_dst_async(DWORD err, DWORD byte_read, LPOVERLAPPED ol) {
+    BOOL res;
+    BufferedOverlapped *bol;
+    HANDLE dst;
+
+    bol = (BufferedOverlapped*)ol;
+    *bol->last_err = err;
+    if (byte_read == 0) {
+        *bol->op_finished += 1;
+        return;
+    }
+    dst = ((HandlePair*)bol->ol.hEvent)->dst;
+    WriteFileEx(dst, bol->buf, byte_read, ol, read_src_async);
 }
 
 Timer timer_start() {
-    Timer t = { .start = timeGetTime() };
+    Timer t = { .start = GetTickCount() };
     return t;
 }
 
 TimerDiff timer_finish(Timer *t) {
-    return timerGetTime() - t->start;
+    return GetTickCount() - t->start;
 }
 
 //

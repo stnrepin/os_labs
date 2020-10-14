@@ -57,8 +57,17 @@ int get_file_time(void *arg);
 int set_file_time(void *arg);
 
 typedef struct {
+    HANDLE src;
+    HANDLE dst;
+} HandlePair;
+
+typedef struct {
     OVERLAPPED ol;
-    char* buf;
+    int op_cnt;
+    volatile int *op_finished;
+    volatile DWORD *last_err;
+    int buf_sz;
+    char *buf;
 } BufferedOverlapped;
 
 typedef struct {
@@ -67,10 +76,10 @@ typedef struct {
 typedef DWORD TimerDiff;
 
 int run_copy_overlapped(void *arg);
-int copy_file_overlapped(HANDLE src, HANDLE dst, int blk_sz, int op_cnt,
+int copy_file_overlapped(HandlePair *hp, int blk_sz, int op_cnt,
                          /*out*/ TimerDiff *tmrd);
-void CALLBACK write_after_read_callback(DWORD err, DWORD byte_sz,
-                                        LPOVERLAPPED ov);
+void CALLBACK read_src_async(DWORD err, DWORD byte_read, LPOVERLAPPED ol);
+void CALLBACK write_dst_async(DWORD err, DWORD byte_read, LPOVERLAPPED ol);
 Timer timer_start();
 TimerDiff timer_finish(Timer *t);
 
