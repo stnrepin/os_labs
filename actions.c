@@ -64,6 +64,7 @@ int drive_info(void *arg) {
         return 0;
     }
 
+    type_str = "<unknown>";
     switch (type) {
         case DRIVE_UNKNOWN:
             __fallthrough;
@@ -196,11 +197,10 @@ int move_file_ex(void *arg) {
 
 int get_file_atts(void *arg) {
     HANDLE h;
-    DWORD res;
+    DWORD res, attrs;
     size_t i, mes_end;
     wchar_t path[MAX_STR];
     char mes[MAX_STR];
-    DWORD attrs;
     const FileAttr *attr;
 
     h = (HANDLE)arg;
@@ -229,10 +229,9 @@ int get_file_atts(void *arg) {
 
 int set_file_atts(void *arg) {
     HANDLE h;
-    DWORD path_size;
+    DWORD path_size, attrs, attr_val;
     BOOL res;
     wchar_t path[MAX_STR];
-    DWORD attrs, attr_val;
 
     h = (HANDLE)arg;
     path_size = GetFinalPathNameByHandle(h, path, MAX_STR, 0);
@@ -258,7 +257,14 @@ int get_file_info(void *arg) {
     BOOL res;
     HANDLE h;
     BY_HANDLE_FILE_INFORMATION info;
-    uint64_t index, size;
+    uint64_t index;
+    double size;
+    int i;
+#define UNIT_COUNT 5
+    char units[UNIT_COUNT][3] = {
+        "B", "KB", "MB", "GB", "TB",
+    };
+    int unit_index;
 
     h = (HANDLE)arg;
     res = GetFileInformationByHandle(h, &info);
@@ -267,8 +273,15 @@ int get_file_info(void *arg) {
     }
     index = ((uint64_t)info.nFileIndexHigh << 32) + info.nFileIndexLow;
     size = ((uint64_t)info.nFileSizeHigh << 32) + info.nFileSizeLow;
+
+    i = 0;
+    while (size >= 1024 && i < UNIT_COUNT - 1) {
+        size /= 1024;
+        i++;
+    }
+
     printf("File index: %" PRIu64 "\n", index);
-    printf("File size (byte): %" PRIu64 "\n", size);
+    printf("File size: %g%s\n", round(size*100)/100, units[i]);
     printf("Number of links: %lu\n", info.nNumberOfLinks);
     return 0;
 }
@@ -450,6 +463,9 @@ void CALLBACK read_src_async(DWORD err, DWORD byte_read, LPOVERLAPPED ol) {
 
     bol = (BufferedOverlapped*)ol;
     *bol->last_err = err;
+    if (err != ERROR_SUCCESS) {
+        return;
+    }
     src = ((HandlePair*)bol->ol.hEvent)->src;
     bol->ol.Offset += (bol->op_cnt)*byte_read;
     ReadFileEx(src, bol->buf, bol->buf_sz, ol, write_dst_async);
@@ -462,7 +478,7 @@ void CALLBACK write_dst_async(DWORD err, DWORD byte_read, LPOVERLAPPED ol) {
 
     bol = (BufferedOverlapped*)ol;
     *bol->last_err = err;
-    if (byte_read == 0) {
+    if (byte_read == 0 || err != ERROR_SUCCESS) {
         *bol->op_finished += 1;
         return;
     }
