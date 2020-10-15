@@ -7,12 +7,12 @@
 #include <Windows.h>
 
 void panic(int err) {
-    printf("panic: %s (%d)\n", get_error_message(err), err);
+    printf("Panic: %s (%d)\n", get_error_message(err), err);
     exit(err);
 }
 
 void print_error(int err) {
-    printf("error: %s (%d)\n", get_error_message(err), err);
+    printf("Error: %s (%d)\n", get_error_message(err), err);
 }
 
 const char *get_error_message(int err) {

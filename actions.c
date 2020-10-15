@@ -166,6 +166,7 @@ int copy_file(void *arg) {
     BOOL res;
     WStrPair *pair;
     pair = (WStrPair*)arg;
+    puts("Copying...");
     res = CopyFile(pair->first, pair->second, TRUE);
     if (!res) {
         return E_WINDOWS_ERROR;
@@ -177,6 +178,7 @@ int move_file(void *arg) {
     BOOL res;
     WStrPair *pair;
     pair = (WStrPair*)arg;
+    puts("Moving...");
     res = MoveFile(pair->first, pair->second);
     if (!res) {
         return E_WINDOWS_ERROR;
@@ -188,6 +190,7 @@ int move_file_ex(void *arg) {
     BOOL res;
     WStrPair *pair;
     pair = (WStrPair*)arg;
+    puts("Moving...");
     res = MoveFileEx(pair->first, pair->second, MOVEFILE_REPLACE_EXISTING);
     if (!res) {
         return E_WINDOWS_ERROR;
