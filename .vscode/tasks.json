@@ -2,10 +2,10 @@
     "tasks": [
         {
             "type": "shell",
-            "label": "C/C++: cl.exe build active file",
+            "label": "Build lab1",
             "command": "../build.ps1",
             "options": {
-                "cwd": "${workspaceFolder}\\build"
+                "cwd": "${workspaceFolder}\\lab1\\build"
             },
             "problemMatcher": [
                 "$msCompile"
