@@ -30,7 +30,7 @@ static const FileAttr kFileAttrStringMap[] = {
     { "Integrity stream", 0x8000 },
     { "Normal", 0x80 },
     { "Not content indexed", 0x2000 },
-    { "No scrub data", 0x2000 },
+    { "No scrub data", 0x20000 },
     { "Offline", 0x1000 },
     { "Readonly", 0x1 },
     { "Recall on data access", 0x400000 },
@@ -40,6 +40,17 @@ static const FileAttr kFileAttrStringMap[] = {
     { "System", 0x4 },
     { "Temporary", 0x100 },
     { "Virtual", 0x10000 },
+};
+
+static const FileAttr kFileAttrStringMapAllowedToBeSet[] = {
+    { "Archive", 0x20 },
+    { "Hidden", 0x2},
+    { "Normal", 0x80 },
+    { "Not content indexed", 0x2000 },
+    { "Offline", 0x1000 },
+    { "Readonly", 0x1 },
+    { "System", 0x4 },
+    { "Temporary", 0x100 },
 };
 
 int list_drivers(void *arg);

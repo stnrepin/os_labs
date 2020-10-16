@@ -233,6 +233,9 @@ int get_file_atts(void *arg) {
 int set_file_atts(void *arg) {
     HANDLE h;
     DWORD path_size, attrs, attr_val;
+    int i, j, attr_count, len;
+    char line[30];
+    const FileAttr *file_attr;
     BOOL res;
     wchar_t path[MAX_STR];
 
@@ -242,12 +245,31 @@ int set_file_atts(void *arg) {
         return E_WINDOWS_ERROR;
     }
 
+    attr_count = ARRAY_SIZE(kFileAttrStringMapAllowedToBeSet, FileAttr);
+    len = 0;
+    for (i = 0; i < attr_count; i += 1) {
+        file_attr = &kFileAttrStringMapAllowedToBeSet[i];
+        len = sprintf(line, "%d - %s", i + 1, file_attr->name);
+        for (j = len; j < sizeof(line); j++) {
+            line[j] = ' ';
+        }
+        line[j-1] = '\0';
+        if (i % 2 != 0 || i == attr_count -  1) {
+            line[j-2] = '\n';
+        }
+        printf("%s", line);
+    }
+
     attrs = 0;
     do {
-        printf("Enter file attribute (hex value, 0 to stop): ");
-        scanf("%lx", &attr_val);
-        attrs |= attr_val;
-    } while(attr_val != 0);
+        printf("Enter file attribute index (0 to stop): ");
+        scanf("%d", &i);
+        if (i > 0 && i <= attr_count) {
+            file_attr = &kFileAttrStringMapAllowedToBeSet[i-1];
+            attrs |= file_attr->flag;
+            printf("Set %s attribute\n", file_attr->name);
+        }
+    } while(i != 0);
 
     res = SetFileAttributes(path, attrs);
     if (!res) {
@@ -264,8 +286,8 @@ int get_file_info(void *arg) {
     double size;
     int i;
 #define UNIT_COUNT 5
-    char units[UNIT_COUNT][3] = {
-        "B", "KB", "MB", "GB", "TB",
+    char units[UNIT_COUNT][4] = {
+        "B", "KiB", "MiB", "GiB", "TiB",
     };
     int unit_index;
 
@@ -299,11 +321,11 @@ int get_file_time(void *arg) {
         return E_WINDOWS_ERROR;
     }
 
-    printf("Creation time: ");
+    printf("Creation time (UTC): ");
     println_filetime(ctime);
-    printf("Last access time: ");
+    printf("Last access time (UTC): ");
     println_filetime(atime);
-    printf("Last write time: ");
+    printf("Last write time (UTC): ");
     println_filetime(wtime);
 
     return 0;
@@ -438,7 +460,9 @@ int copy_file_overlapped(HandlePair* hp,
         offset += buf_sz;
         read_src_async(ERROR_SUCCESS, 0, (LPOVERLAPPED)&bol[i]);
     }
-    while (ol_op_finished < op_cnt && ol_op_err == ERROR_SUCCESS) {
+    while (ol_op_finished < op_cnt &&
+                (ol_op_err == ERROR_SUCCESS || ol_op_err == ERROR_HANDLE_EOF))
+    {
         SleepEx(INFINITE, TRUE);
     }
     *tmrd = timer_finish(&tmr);
@@ -463,30 +487,44 @@ void CALLBACK read_src_async(DWORD err, DWORD byte_read, LPOVERLAPPED ol) {
     BOOL res;
     BufferedOverlapped *bol;
     HANDLE src;
+    DWORD unused;
 
     bol = (BufferedOverlapped*)ol;
-    *bol->last_err = err;
     if (err != ERROR_SUCCESS) {
+        *bol->last_err = err;
         return;
     }
     src = ((HandlePair*)bol->ol.hEvent)->src;
     bol->ol.Offset += (bol->op_cnt)*byte_read;
-    ReadFileEx(src, bol->buf, bol->buf_sz, ol, write_dst_async);
+    res = ReadFileEx(src, bol->buf, bol->buf_sz, ol, write_dst_async);
+    if (!res) {
+        GetOverlappedResult(src, ol, &unused, TRUE);
+        *bol->last_err = GetLastError();
+    }
 }
 
 void CALLBACK write_dst_async(DWORD err, DWORD byte_read, LPOVERLAPPED ol) {
     BOOL res;
     BufferedOverlapped *bol;
     HANDLE dst;
+    DWORD unused;
 
     bol = (BufferedOverlapped*)ol;
-    *bol->last_err = err;
-    if (byte_read == 0 || err != ERROR_SUCCESS) {
+    if (err != ERROR_SUCCESS && err != ERROR_HANDLE_EOF) {
+        *bol->last_err = err;
+        return;
+    }
+    if (byte_read == 0) {
         *bol->op_finished += 1;
         return;
     }
     dst = ((HandlePair*)bol->ol.hEvent)->dst;
-    WriteFileEx(dst, bol->buf, byte_read, ol, read_src_async);
+    res = WriteFileEx(dst, bol->buf, byte_read, ol, read_src_async);
+    if (!res) {
+        *bol->op_finished += 1;
+        GetOverlappedResult(dst, ol, &unused, TRUE);
+        *bol->last_err = GetLastError();
+    }
 }
 
 Timer timer_start() {
