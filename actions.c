@@ -366,15 +366,23 @@ int set_file_time(void *arg) {
 //
 
 int run_copy_overlapped(void *arg) {
-    int block_size, block_count, op_cnt;
+    int cluster_size, cluster_count, op_cnt;
     HANDLE src_f, dst_f;
     DWORD res, sectors_per_cluster, bytes_per_sector;
     HandlePair hp;
     wchar_t src_name[MAX_STR], dst_name[MAX_STR];
     TimerDiff tmrd;
 
-    printf("Enter the block count: ");
-    scanf("%d", &block_count);
+    res = GetDiskFreeSpace(NULL, &sectors_per_cluster, &bytes_per_sector,
+                           NULL, NULL);
+    if (res == 0) {
+        return E_WINDOWS_ERROR;
+    }
+    cluster_size = sectors_per_cluster*bytes_per_sector;
+    printf("Use cluster size %ld\n", cluster_size);
+
+    printf("Enter the number of clusters per block: ");
+    scanf("%d", &cluster_count);
     printf("Enter operation count: ");
     scanf("%d%*c", &op_cnt);
 
@@ -387,14 +395,6 @@ int run_copy_overlapped(void *arg) {
         return E_WINDOWS_ERROR;
     }
 
-    res = GetDiskFreeSpace(NULL, &sectors_per_cluster, &bytes_per_sector,
-                           NULL, NULL);
-    if (res == 0) {
-        return E_WINDOWS_ERROR;
-    }
-    block_size = sectors_per_cluster*bytes_per_sector;
-    printf("Use block size %ld\n", block_size);
-
     printf("Enter destination file name: ");
     readlinew(dst_name, MAX_STR);
     dst_f = CreateFile(dst_name, GENERIC_WRITE, 0, NULL,
@@ -406,7 +406,7 @@ int run_copy_overlapped(void *arg) {
 
     hp.src = src_f;
     hp.dst = dst_f;
-    res = copy_file_overlapped(&hp, block_size*block_count, op_cnt, &tmrd);
+    res = copy_file_overlapped(&hp, cluster_size*cluster_count, op_cnt, &tmrd);
     if (res != 0) {
         return res;
     }
