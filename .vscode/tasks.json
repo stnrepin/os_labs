@@ -3,15 +3,7 @@
         {
             "type": "shell",
             "label": "C/C++: cl.exe build active file",
-            "command": "cl.exe",
-            "args": [
-                "/Zi",
-                "/EHsc",
-                "/std:c11",
-                "-I", "../",
-                "..\\main.c", "..\\actions.c", "..\\menu.c", "..\\error.c",
-                "-DUNICODE"
-            ],
+            "command": "../build.ps1",
             "options": {
                 "cwd": "${workspaceFolder}\\build"
             },
