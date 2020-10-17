@@ -7,6 +7,7 @@ enum Errors {
     E_ERROR_HANDLING,
     E_DRIVE_INVALID_LETTER,
     E_FORMAT,
+    E_SAME_FILES,
     E_WINDOWS_ERROR,
 };
 

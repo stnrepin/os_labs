@@ -52,12 +52,41 @@ int create_remove_dir(void *arg) {
 
 int copy_move_file(void *arg) {
     WStrPair pair;
+    HANDLE h1, h2;
+    BY_HANDLE_FILE_INFORMATION h1_info, h2_info;
+    BOOL res1, res2;
+    int res;
+
+    res = 0;
 
     printf("Enter source file/directory path: ");
     readlinew(pair.first, MAX_STR);
     printf("Enter destination file/directory path: ");
     readlinew(pair.second, MAX_STR);
 
+    h1 = CreateFile(pair.first, GENERIC_READ, FILE_SHARE_READ, NULL,
+                    OPEN_EXISTING, 0, NULL);
+    h2 = CreateFile(pair.second, GENERIC_READ, FILE_SHARE_READ, NULL,
+                    OPEN_EXISTING, 0, NULL);
+    if (h1 != INVALID_HANDLE_VALUE && h2 != INVALID_HANDLE_VALUE) {
+        res1 = GetFileInformationByHandle(h1, &h1_info);
+        res2 = GetFileInformationByHandle(h2, &h2_info);
+        if (res1 && res2) {
+            if (h1_info.dwVolumeSerialNumber == h2_info.dwVolumeSerialNumber &&
+                h1_info.nFileIndexHigh == h2_info.nFileIndexHigh &&
+                h1_info.nFileIndexLow == h2_info.nFileIndexLow)
+            {
+                res = E_SAME_FILES;
+            }
+        }
+    }
+
+    CloseHandle(h1);
+    CloseHandle(h2);
+
+    if (res != 0) {
+        return res;
+    }
     return launch_menu(&pair, build_copy_move_file_menu);
 }
 

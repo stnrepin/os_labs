@@ -27,6 +27,8 @@ const char *get_error_message(int err) {
             return "drive is not exist";
         case E_FORMAT:
             return "invalid input format";
+        case E_SAME_FILES:
+            return "files are same";
         case E_WINDOWS_ERROR:
             return get_windows_error_message();
     }
