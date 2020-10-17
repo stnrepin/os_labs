@@ -1,2 +1,4 @@
 */build/*
 */workspace/*
+*/report/out/*
+!*/report/out/*.pdf
