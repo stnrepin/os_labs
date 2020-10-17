@@ -11,6 +11,6 @@
 \contentsline {subsection}{\numberline {1.5}Копирование и перемещение файлов с учетом перемещения на место существующих файлов}{7}{subsection.1.5}%
 \contentsline {subsection}{\numberline {1.6}Анализ и изменение атрибутов файлов}{9}{subsection.1.6}%
 \contentsline {section}{\numberline {2}Копирование файла с помощью операций перекрывающегося ввода-вывода}{14}{section.2}%
-\contentsline {paragraph}{\xpg@select@fontfamily {russian}\fontseries {m}\selectfont \fontshape {n}\selectfont \bfseries \centerline {{Вывод}}}{16}{paragraph*.24}%
-\contentsline {section}{Вывод}{16}{paragraph*.24}%
+\contentsline {paragraph}{\xpg@select@fontfamily {russian}\fontseries {m}\selectfont \fontshape {n}\selectfont \bfseries \centerline {{Вывод}}}{17}{paragraph*.24}%
+\contentsline {section}{Вывод}{17}{paragraph*.24}%
 \contentsfinish 
