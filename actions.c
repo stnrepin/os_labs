@@ -44,10 +44,12 @@ int drive_info(void *arg) {
     DWORD drive_flags, type,
           volume_serial, max_comp_len, fs_flags,
           sec_per_clu, bytes_per_sec, free_clu, cluster_count;
+    uint64_t free_space;
     char drive_letter, drive_index;
-    const char *type_str;
+    const char *type_str, *free_space_unit;
     wchar_t root_buf[MAX_STR], volume_buf[MAX_STR], fs_name_buf[MAX_STR];
     BOOL res;
+    double free_space_h;
 
     drive_flags = GetLogicalDrives();
 
@@ -109,10 +111,13 @@ int drive_info(void *arg) {
     if (!res) {
         return E_WINDOWS_ERROR;
     }
+    free_space = ((uint64_t)bytes_per_sec)*sec_per_clu*free_clu;
+    free_space_unit = bytes_to_human_round(free_space, &free_space_h);
     printf("Sectors per cluster: %ld\n", sec_per_clu);
     printf("Bytes per sector: %ld\n", bytes_per_sec);
     printf("Number of free clusters: %ld\n", free_clu);
     printf("Total number of clusters: %ld\n", cluster_count);
+    printf("Free space: %g%s\n", free_space_h, free_space_unit);
 
     return 0;
 }
@@ -282,14 +287,10 @@ int get_file_info(void *arg) {
     BOOL res;
     HANDLE h;
     BY_HANDLE_FILE_INFORMATION info;
-    uint64_t index;
-    double size;
+    uint64_t index, size;
     int i;
-#define UNIT_COUNT 5
-    char units[UNIT_COUNT][4] = {
-        "B", "KiB", "MiB", "GiB", "TiB",
-    };
-    int unit_index;
+    double size_h;
+    const char* unit;
 
     h = (HANDLE)arg;
     res = GetFileInformationByHandle(h, &info);
@@ -298,15 +299,10 @@ int get_file_info(void *arg) {
     }
     index = ((uint64_t)info.nFileIndexHigh << 32) + info.nFileIndexLow;
     size = ((uint64_t)info.nFileSizeHigh << 32) + info.nFileSizeLow;
-
-    i = 0;
-    while (size >= 1024 && i < UNIT_COUNT - 1) {
-        size /= 1024;
-        i++;
-    }
+    unit = bytes_to_human_round(size, &size_h);
 
     printf("File index: %" PRIu64 "\n", index);
-    printf("File size: %g%s\n", round(size*100)/100, units[i]);
+    printf("File size: %g%s\n", size_h, unit);
     printf("Number of links: %lu\n", info.nNumberOfLinks);
     return 0;
 }
@@ -548,6 +544,19 @@ wchar_t *readlinew(wchar_t *buf, size_t size) {
         buf[len-1] = '\0';
     }
     return buf;
+}
+
+const char* bytes_to_human_round(uint64_t bytes, /*out*/ double *size) {
+    int unit_index, i;
+
+    i = 0;
+    *size = bytes;
+    while (*size >= 1024 && i < HUMAN_READABLE_UNITS_COUNT - 1) {
+        *size /= 1024;
+        i++;
+    }
+    *size = round((*size)*100)/100;
+    return kHumanReadableUnits[i];
 }
 
 void println_filetime(FILETIME ft) {

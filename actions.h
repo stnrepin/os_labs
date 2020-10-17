@@ -1,6 +1,7 @@
 #ifndef ACTIONS_H_
 #define ACTIONS_H_
 
+#include <stdint.h>
 #include <wchar.h>
 #include <Windows.h>
 
@@ -95,6 +96,13 @@ Timer timer_start();
 TimerDiff timer_finish(Timer *t);
 
 wchar_t *readlinew(wchar_t *buf, size_t size);
+
+#define HUMAN_READABLE_UNITS_COUNT 5
+static char kHumanReadableUnits[HUMAN_READABLE_UNITS_COUNT][4] = {
+    "B", "KiB", "MiB", "GiB", "TiB",
+};
+const char* bytes_to_human_round(uint64_t bytes, /*out*/ double *size);
+
 void println_filetime(FILETIME ft);
 
 #endif // !ACTIONS_H_
