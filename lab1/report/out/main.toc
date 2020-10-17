@@ -1,0 +1,9 @@
+\selectlanguage *{russian}
+\contentsline {paragraph}{\xpg@select@fontfamily {russian}\fontseries {m}\selectfont \fontshape {n}\selectfont \bfseries \centerline {{Цель работы}}}{3}{paragraph*.2}%
+\contentsline {section}{Цель работы}{3}{paragraph*.2}%
+\contentsline {paragraph}{\xpg@select@fontfamily {russian}\fontseries {m}\selectfont \fontshape {n}\selectfont \bfseries \centerline {{Введение}}}{3}{paragraph*.4}%
+\contentsline {section}{Введение}{3}{paragraph*.4}%
+\contentsline {section}{\numberline {1}Управление дисками, каталогами и файлами.}{3}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Вывод списка дисков}{3}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Вывод информации о диске}{4}{subsection.1.2}%
+\contentsfinish 

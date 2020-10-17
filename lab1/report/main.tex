@@ -1,0 +1,91 @@
+\documentclass[a4paper,14pt]{extarticle}
+\input{/home/acesk/Documents/latex/preamble.tex}
+
+\newcommand{\Code}[1]{\textit{#1}}
+
+\begin{document}
+
+\input{inc/titlepage}
+
+\renewcommand*{\thepage}{}
+\tableofcontents
+\clearpage
+\renewcommand*{\thepage}{\arabic{page}}
+
+\setcounter{page}{3}
+
+\anonsection{Цель работы}
+
+Исследовать управление файловой системой с помощью Win32 API.
+
+\anonsection{Введение}
+
+При выполнении лабораторной работы на языке программирования C стандарта C11
+было разработано консольной приложение, управление которым происходит через
+различные меню, содержащие подпункты и подменю, которые соответствуют пунктам
+заданий. Исходный код приложения доступен на GitHub
+\footnote{\url{https://github.com/stnrepin/os_labs/tree/master/lab1}}.
+
+\begin{table}[H]
+    \centering
+    \caption{Описание файлов в проекте}
+    \begin{tabularx}{\textwidth}{|c|X|}
+        \hline
+        Файл & Описание \\
+        \hline
+        menu.c & Определение типов и функций для работы с меню \\
+        \hline
+        main.c & Точка входа в программу; объявления конкретных меню и
+                    переходов между ними \\
+        \hline
+        actions.c & Реализация функций непосредственно выполняющих требования
+                    заданий (другими словами, callback'и конечных пунктов меню)
+                    \\
+        \hline
+        error.c & Описание номеров ошибок, а также функции отображения
+                    сообщений об ошибках \\
+        \hline
+    \end{tabularx}
+\end{table}
+
+Сборка проекта производится с помощью Powershell-скрипта \Code{build.ps1}
+(следует создать папку \Code{build} и запускать скрипт из нее). Также
+потребуется пакет Build Tools for Visual Studio 2019.
+
+
+\section{Управление дисками, каталогами и файлами.}
+
+
+\subsection{Вывод списка дисков}
+
+Используя функции \Code{GetLogicalDrives} и \Code{GetLogicalDriveStrings},
+программа получается набор строк, содержащих названия логических дисков, и
+отображает их на экране.
+
+\addtwoimghere{res/11.png}{res/11_real.png}{0.6}{%
+Результат выполнения программы и его проверка с помощью Проводника}{}
+
+
+\subsection{Вывод информации о диске}
+
+Используя функции \Code{GetDriveType}, \Code{GetVolumeInformation},
+\Code{GetDiskFreeSpace}, программа получает информацию о произвольном
+существующем диске и отображает ее.
+
+\addimghere{res/12.png}{0.45}{Результат выполнения программы}{}
+
+
+\subsection{Создание и удаление директорий}
+
+Используя функции \Code{CreateDirectory} и \Code{RemoveDirectory}, программа
+создает и удаляет директории соответственно.
+
+Заметим, что в программа также добавлена возможность передачи аргумента
+командной строки, при получении которого программа меняет текущую директории
+при запуске с помощью функции \Code{SetCurrentDirectory}.
+
+\addimghere{res/13.png}{res/13_real.png}{0.6}{%
+Результат выполнения программы и его проверка с помощью Проводника}{}
+
+\end{document}
+
