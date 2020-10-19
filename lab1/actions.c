@@ -45,9 +45,11 @@ int drive_info(void *arg) {
           volume_serial, max_comp_len, fs_flags,
           sec_per_clu, bytes_per_sec, free_clu, cluster_count;
     uint64_t free_space;
-    char drive_letter, drive_index;
+    char drive_letter, drive_index, mes[MAX_STR*10];
     const char *type_str, *free_space_unit;
     wchar_t root_buf[MAX_STR], volume_buf[MAX_STR], fs_name_buf[MAX_STR];
+    int i, mes_end;
+    const FlagInfo *fs_flag;
     BOOL res;
     double free_space_h;
 
@@ -101,9 +103,22 @@ int drive_info(void *arg) {
         return E_WINDOWS_ERROR;
     }
     printf("Volume name: %S\n", volume_buf);
-    printf("Volume serial number: %08lx\n", volume_serial);
+    printf("Volume serial number: 0x%08lx\n", volume_serial);
     printf("Max component length: %ld\n", max_comp_len);
-    printf("File system flags: %08lx\n", fs_flags);
+    printf("File system flags: 0x%08lx\n", fs_flags);
+    mes_end = 0;
+    mes[mes_end] = '\0';
+    for (i = 0; i < ARRAY_SIZE(kVolumeInformationFsFlags, FlagInfo); i++) {
+        fs_flag = &kVolumeInformationFsFlags[i];
+        if (fs_flags & fs_flag->flag) {
+            mes[mes_end++] = '\t';
+            memcpy(&mes[mes_end], fs_flag->name, strlen(fs_flag->name));
+            mes_end += strlen(fs_flag->name);
+            mes[mes_end++] = '\n';
+            mes[mes_end] = '\0';
+        }
+    }
+    printf("%s", mes);
     printf("File system name: %S\n", fs_name_buf);
 
     res = GetDiskFreeSpace(root_buf, &sec_per_clu, &bytes_per_sec,
@@ -209,7 +224,7 @@ int get_file_atts(void *arg) {
     size_t i, mes_end;
     wchar_t path[MAX_STR];
     char mes[MAX_STR];
-    const FileAttr *attr;
+    const FlagInfo *attr;
 
     h = (HANDLE)arg;
     res = GetFinalPathNameByHandle(h, path, MAX_STR, 0);
@@ -222,8 +237,8 @@ int get_file_atts(void *arg) {
     }
 
     mes_end = 0;
-    for (i = 0; i < ARRAY_SIZE(kFileAttrStringMap, FileAttr); i++) {
-        attr = &kFileAttrStringMap[i];
+    for (i = 0; i < ARRAY_SIZE(kFileAttrs, FlagInfo); i++) {
+        attr = &kFileAttrs[i];
         if (attrs & attr->flag) {
             memcpy(&mes[mes_end], attr->name, strlen(attr->name));
             mes_end += strlen(attr->name);
@@ -240,7 +255,7 @@ int set_file_atts(void *arg) {
     DWORD path_size, attrs, attr_val;
     int i, j, attr_count, len;
     char line[30];
-    const FileAttr *file_attr;
+    const FlagInfo *file_attr;
     BOOL res;
     wchar_t path[MAX_STR];
 
@@ -250,10 +265,10 @@ int set_file_atts(void *arg) {
         return E_WINDOWS_ERROR;
     }
 
-    attr_count = ARRAY_SIZE(kFileAttrStringMapAllowedToBeSet, FileAttr);
+    attr_count = ARRAY_SIZE(kFileAttrsAllowedToBeSet, FlagInfo);
     len = 0;
     for (i = 0; i < attr_count; i += 1) {
-        file_attr = &kFileAttrStringMapAllowedToBeSet[i];
+        file_attr = &kFileAttrsAllowedToBeSet[i];
         len = sprintf(line, "%d - %s", i + 1, file_attr->name);
         for (j = len; j < sizeof(line); j++) {
             line[j] = ' ';
@@ -270,7 +285,7 @@ int set_file_atts(void *arg) {
         printf("Enter file attribute index (0 to stop): ");
         scanf("%d", &i);
         if (i > 0 && i <= attr_count) {
-            file_attr = &kFileAttrStringMapAllowedToBeSet[i-1];
+            file_attr = &kFileAttrsAllowedToBeSet[i-1];
             attrs |= file_attr->flag;
             printf("Set %s attribute\n", file_attr->name);
         }
