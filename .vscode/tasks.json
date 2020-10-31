@@ -10,6 +10,17 @@
             "problemMatcher": [
                 "$msCompile"
             ],
+        },
+        {
+            "type": "shell",
+            "label": "Build lab2",
+            "command": "../build.ps1",
+            "options": {
+                "cwd": "${workspaceFolder}\\lab2\\build"
+            },
+            "problemMatcher": [
+                "$msCompile"
+            ],
             "group": {
                 "kind": "build",
                 "isDefault": true
