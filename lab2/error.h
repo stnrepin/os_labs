@@ -10,6 +10,7 @@ enum Errors {
     E_SAME_FILES,
     E_WINDOWS_ERROR,
     E_EXIT_REQUESTED,
+    E_PAGE_ACCESS_VIOLATION,
 };
 
 void panic(int err);

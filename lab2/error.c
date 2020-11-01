@@ -33,6 +33,8 @@ const char *get_error_message(int err) {
             return get_windows_error_message();
         case E_EXIT_REQUESTED:
             return "exited";
+        case E_PAGE_ACCESS_VIOLATION:
+            return "access violation";
     }
     return strerror(err);
 }

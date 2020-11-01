@@ -9,20 +9,30 @@ static_assert(sizeof(DWORD) == sizeof(long), "Platform should define DWORD as lo
 
 #define MAX_STR 256
 
+typedef struct {
+    void* addr;
+    size_t sz;
+    int commit;
+} VirtualAllocParam;
+
 int print_system_info(void *arg);
 int print_global_mem_status(void *arg);
 int print_mem_status(void *arg);
-int virtual_alloc_auto(void *arg);
-int virtual_alloc_manual(void *arg);
-int virtual_alloc_phy_auto(void *arg);
-int virtual_alloc_phy_manual(void *arg);
+int virtual_alloc(void *arg);
 int write_to_addr(void *arg);
+int read_from_addr(void *arg);
 int virtual_protect(void *arg);
-int virtual_protect_check(void *arg);
-int virtual_free_addr(void *arg);
+int virtual_free(void *arg);
 
-int write_mapping_file(void *arg);
-int read_mapping_file(void *arg);
+static const wchar_t kMappingFilePath[MAX_STR] = L"$mapping.bin";
+
+int run_as_writer(void *arg);
+int run_as_reader(void *arg);
+
+int page_fault_exception_filter(DWORD ex_code);
+void read_addr(void **addr, const char *suffix_mes);
+int read_region(void **addr, const char *suffix_mes, int print_info,
+                MEMORY_BASIC_INFORMATION *mbi_o);
 
 wchar_t *readlinew(wchar_t *buf, size_t size);
 
